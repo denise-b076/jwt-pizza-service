@@ -70,6 +70,20 @@ async function createStore() {
     return [createStoreRes.body.id, createStoreRes.body.franchiseId];
 }
 
+test('delete a franchise', deleteFranchise);
+
+async function deleteFranchise() {
+    const franchiseID = await createFranchise();
+    const deleteFranchiseRes = await request(app)
+        .delete(`/api/franchise/${franchiseID}`)
+        .set('Authorization', `Bearer ${testAdminUserToken}`);
+    expect(deleteFranchiseRes.status).toBe(200);
+    expect(deleteFranchiseRes.header['content-type']).toMatch('application/json; charset=utf-8');
+    expect(deleteFranchiseRes.body).toMatchObject({
+        message: 'franchise deleted'
+    });
+}
+
 test('delete a store', deleteStore);
 
 async function deleteStore() {
