@@ -67,5 +67,19 @@ async function createStore() {
         franchiseId: franchiseID,
         name: storeName
     });
-    return createStoreRes.body.id;
+    return [createStoreRes.body.id, createStoreRes.body.franchiseId];
+}
+
+test('delete a store', deleteStore);
+
+async function deleteStore() {
+    const idList = await createStore();
+    const deleteStoreRes = await request(app)
+        .delete(`/api/franchise/${idList[0]}/store/${idList[1]}`)
+        .set('Authorization', `Bearer ${testAdminUserToken}`);
+    expect(deleteStoreRes.status).toBe(200);
+    expect(deleteStoreRes.headers['content-type']).toMatch('application/json; charset=utf-8');
+    expect(deleteStoreRes.body).toMatchObject({
+        message: 'store deleted'
+    });
 }
