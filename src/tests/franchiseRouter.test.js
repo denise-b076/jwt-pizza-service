@@ -27,13 +27,15 @@ beforeAll(async () => {
     testAdminUserToken = loginRes.body.token;
 });
 
-test('create a franchise', async() => {
+test('create a franchise', createFranchise);
+
+async function createFranchise() {
     const franchiseName = `testFranchise-${randomName()}`;
-    const franchiseReqBody = { name: franchiseName, admins: [{ email: testAdminUser.email }] };
+    const franchiseCreationReqBody = { name: franchiseName, admins: [{ email: testAdminUser.email }] };
     const franchiseCreationRes = await request(app)
         .post('/api/franchise')
         .set('Authorization', `Bearer ${testAdminUserToken}`)
-        .send(franchiseReqBody);
+        .send(franchiseCreationReqBody);
     expect(franchiseCreationRes.status).toBe(200);
     expect(franchiseCreationRes.headers['content-type']).toMatch('application/json; charset=utf-8');
     expect(franchiseCreationRes.body).toMatchObject({
@@ -45,4 +47,25 @@ test('create a franchise', async() => {
             }], 
             id: expect.any(Number)
     });
-});
+    return franchiseCreationRes.body.id;
+}
+
+test('create a store', createStore);
+
+async function createStore() {
+    const franchiseID = await createFranchise();
+    const storeName = `testStore-${randomName()}`;
+    const createStoreReqBody = { franchiseID: franchiseID, name: storeName, }; 
+    const createStoreRes = await request(app)
+        .post(`/api/franchise/${franchiseID}/store`)
+        .set('Authorization', `Bearer ${testAdminUserToken}`)
+        .send(createStoreReqBody);
+    expect(createStoreRes.status).toBe(200);
+    expect(createStoreRes.headers['content-type']).toMatch('application/json; charset=utf-8');
+    expect(createStoreRes.body).toMatchObject({
+        id: expect.any(Number),
+        franchiseId: franchiseID,
+        name: storeName
+    });
+    return createStoreRes.body.id;
+}
