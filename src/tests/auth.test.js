@@ -6,12 +6,12 @@ function randomName() {
 }
 
 const testUser = { name: 'pizza diner', email: 'reg@test.com', password: 'a' };
-// let testUserAuthToken;
+let testUserAuthToken;
 
 beforeAll(async () => {
   testUser.email = randomName() + '@test.com';
   const registerRes = await request(app).post('/api/auth').send(testUser);
-  // testUserAuthToken = registerRes.body.token;
+  testUserAuthToken = registerRes.body.token;
 });
 
 test('login', async () => {
@@ -22,4 +22,12 @@ test('login', async () => {
   const user =  { ...testUser, roles: [{ role: 'diner' }] };
   delete user.password;
   expect(loginRes.body.user).toMatchObject(user);
+});
+
+test('logout', async () => {
+  const logoutRes = await request(app).delete('/api/auth').set('Authorization', `Bearer ${testUserAuthToken}`);
+  expect(logoutRes.status).toBe(200);
+  expect(logoutRes.body).toMatchObject({
+    message: 'logout successful'
+  });
 });

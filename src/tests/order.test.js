@@ -69,7 +69,6 @@ async function addMenuItem() {
             price: addItemReqBody.price
         })
     ]));
-    return addItemRes;
 }
 
 test('get menu', async () => {
