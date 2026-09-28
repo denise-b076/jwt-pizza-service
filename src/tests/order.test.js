@@ -29,6 +29,7 @@ beforeAll(async () => {
     testUser = { name: `testUser-${randomName()}`, email: `${randomName()}@test.com`, password: `${randomName()}`};
     const registerRes = await request(app).post('/api/auth').send(testUser);
     testUserAuthToken = registerRes.body.token;
+    testUser.id = registerRes.body.user.id;
 
     testAdminUser = await createAdminUser();
     const loginRes = await request(app).put('/api/auth').send(testAdminUser);
@@ -102,4 +103,27 @@ async function createOrder() {
         }
     });
     expect(createOrderRes.body.jwt).toMatch(/^[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*$/);
+
+    return createOrderRes;
 }
+
+test('get a users orders', async () => {
+    const createOrderRes = await createOrder();
+    const getUserOrders = await request(app)
+        .get('/api/order')
+        .set('Authorization', `Bearer ${testUserAuthToken}`);
+    expect(getUserOrders.status).toBe(200);
+    expect(getUserOrders.body).toMatchObject({
+        dinerId: testUser.id,
+        orders: expect.arrayContaining([
+            expect.objectContaining({
+                id: createOrderRes.body.order.id,
+                franchiseId: createOrderRes.body.order.franchiseId,
+                storeId: createOrderRes.body.order.storeId,
+                items: expect.arrayContaining([
+                    expect.objectContaining(createOrderRes.body.order.items[0])
+                ])
+            })
+        ])
+    });
+});
