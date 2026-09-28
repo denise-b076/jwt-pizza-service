@@ -30,7 +30,7 @@ test('get authenticated user', async () => {
 });
 
 test('update user', async () => {
-    const putUserReqBody = { name: 'newName', email: testUser.email, password: testUser.password};
+    const putUserReqBody = { name: randomName(), email: testUser.email, password: testUser.password};
     const putUserRes = await request(app)
         .put(`/api/user/${testUser.id}`)
         .set('Authorization', `Bearer ${testUserAuthToken}`)
