@@ -6,12 +6,12 @@ function randomName() {
 }
 
 const testUser = { name: 'pizza diner', email: 'reg@test.com', password: 'a' };
-let testUserAuthToken;
+// let testUserAuthToken;
 
 beforeAll(async () => {
   testUser.email = randomName() + '@test.com';
   const registerRes = await request(app).post('/api/auth').send(testUser);
-  testUserAuthToken = registerRes.body.token;
+  // testUserAuthToken = registerRes.body.token;
 });
 
 test('login', async () => {

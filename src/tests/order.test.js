@@ -22,14 +22,32 @@ let testAdminUser;
 let testAdminUserToken;
 let testUser;
 let testUserAuthToken;
+let testFranchise;
+let testStore;
 
 beforeAll(async () => {
     testUser = { name: `testUser-${randomName()}`, email: `${randomName()}@test.com`, password: `${randomName()}`};
     const registerRes = await request(app).post('/api/auth').send(testUser);
     testUserAuthToken = registerRes.body.token;
+
     testAdminUser = await createAdminUser();
     const loginRes = await request(app).put('/api/auth').send(testAdminUser);
     testAdminUserToken = loginRes.body.token;
+
+    const franchiseName = `testFranchise-${randomName()}`;
+    const franchiseCreationReqBody = { name: franchiseName, admins: [{ email: testAdminUser.email }] };
+    testFranchise = await request(app)
+        .post('/api/franchise')
+        .set('Authorization', `Bearer ${testAdminUserToken}`)
+        .send(franchiseCreationReqBody);
+
+    const franchiseID = testFranchise.body.id;
+    const storeName = `testStore-${randomName()}`;
+    const createStoreReqBody = { franchiseID: franchiseID, name: storeName, }; 
+    testStore = await request(app)
+        .post(`/api/franchise/${franchiseID}/store`)
+        .set('Authorization', `Bearer ${testAdminUserToken}`)
+        .send(createStoreReqBody);
 });
 
 test('add an item to the menu', addMenuItem);
@@ -58,3 +76,30 @@ test('get menu', async () => {
         .get('/api/order/menu');
     expect(getMenuRes.status).toBe(200);
 });
+
+test('create an order', createOrder);
+
+async function createOrder() {
+    const createOrderReqBody = { 
+        franchiseId: testFranchise.body.id,  
+        storeId: testStore.body.id, 
+        items: [{
+            menuId: 1,
+            description: 'Veggie',
+            price: 0.05
+        }]
+    };
+    const createOrderRes = await request(app)
+        .post('/api/order')
+        .set('Authorization', `Bearer ${testUserAuthToken}`)
+        .send(createOrderReqBody);
+    expect(createOrderRes.status).toBe(200);
+    expect(createOrderRes.body).toMatchObject({
+        order: {
+            franchiseId: testFranchise.body.id,
+            storeId: testStore.body.id,
+            items: createOrderReqBody.items,
+        }
+    });
+    expect(createOrderRes.body.jwt).toMatch(/^[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*$/);
+}
