@@ -28,3 +28,23 @@ test('get authenticated user', async () => {
         roles: testUser.roles
     });
 });
+
+test('update user', async () => {
+    const putUserReqBody = { name: 'newName', email: testUser.email, password: testUser.password};
+    const putUserRes = await request(app)
+        .put(`/api/user/${testUser.id}`)
+        .set('Authorization', `Bearer ${testUserAuthToken}`)
+        .send(putUserReqBody);
+    expect(putUserRes.status).toBe(200);
+    expect(putUserRes.body).toMatchObject({
+        user: {
+            id: testUser.id,
+            name: putUserReqBody.name,
+            email: testUser.email,
+            roles: testUser.roles
+        }
+    });
+    expect(putUserRes.body.token).toMatch(/^[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*$/);
+    expect(putUserRes.body.token).not.toBe(testUserAuthToken);
+    testUserAuthToken = putUserRes.body.token;
+});
