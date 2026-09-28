@@ -47,13 +47,58 @@ async function createFranchise() {
             }], 
             id: expect.any(Number)
     });
-    return franchiseCreationRes.body.id;
+    return franchiseCreationRes.body;
 }
+
+test('get franchises', async() => {
+    const getFranchisesRes = await request(app)
+        .get('/api/franchise');
+    expect(getFranchisesRes.status).toBe(200);
+    expect(getFranchisesRes.headers['content-type']).toMatch('application/json; charset=utf-8');
+});
+
+test('get specific franchise', async() => {
+    const franchise = await createFranchise();
+    const getSpecificFranchiseRes = await request(app)
+        .get(`/api/franchise?name=${franchise.name}`);
+    expect(getSpecificFranchiseRes.status).toBe(200);
+    expect(getSpecificFranchiseRes.headers['content-type']).toMatch('application/json; charset=utf-8');
+    expect(getSpecificFranchiseRes.body).toMatchObject({
+        franchises: [{
+            id: franchise.id,
+            name: franchise.name,
+            stores: [],
+        }],
+        more: false
+    });
+});
+
+test('get user franchises', async () => {
+    const franchise = await createFranchise();
+    const getUserFranchisesRes = await request(app)
+        .get(`/api/franchise/${testAdminUser.id}`)
+        .set('Authorization', `Bearer ${testAdminUserToken}`);
+    expect(getUserFranchisesRes.status).toBe(200);
+    expect(getUserFranchisesRes.headers['content-type']).toMatch('application/json; charset=utf-8');
+    expect(getUserFranchisesRes.body).toEqual(expect.arrayContaining([
+        expect.objectContaining({
+            id: franchise.id,
+            name: franchise.name,
+            admins: [{
+                id: testAdminUser.id,
+                name: testAdminUser.name,
+                email: testAdminUser.email
+            }],
+            stores: []
+        })
+    ]));
+});
 
 test('create a store', createStore);
 
 async function createStore() {
-    const franchiseID = await createFranchise();
+    const franchise = await createFranchise();
+    const franchiseID = franchise.id;
     const storeName = `testStore-${randomName()}`;
     const createStoreReqBody = { franchiseID: franchiseID, name: storeName, }; 
     const createStoreRes = await request(app)
@@ -73,7 +118,8 @@ async function createStore() {
 test('delete a franchise', deleteFranchise);
 
 async function deleteFranchise() {
-    const franchiseID = await createFranchise();
+    const franchise = await createFranchise();
+    const franchiseID = franchise.id;
     const deleteFranchiseRes = await request(app)
         .delete(`/api/franchise/${franchiseID}`)
         .set('Authorization', `Bearer ${testAdminUserToken}`);
