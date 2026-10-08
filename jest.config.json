@@ -1,5 +1,6 @@
 {
     "collectCoverage": true,
+    "globalSetup": "<rootDir>/src/tests/globalSetup.js",
     "coverageReporters": ["json-summary", "text"],
     "coverageThreshold": {
         "global": {

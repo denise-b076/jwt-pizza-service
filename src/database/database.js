@@ -358,8 +358,9 @@ class DB {
         }
 
         if (!dbExists) {
-          const defaultAdmin = { name: '常用名字', email: 'a@jwt.com', password: 'admin', roles: [{ role: Role.Admin }] };
-          this.addUser(defaultAdmin);
+          const password = await bcrypt.hash('admin', 10);
+          const userResult = await this.query(connection, `INSERT INTO user (name, email, password) VALUES (?, ?, ?)`, ['常用名字', 'a@jwt.com', password]);
+          await this.query(connection, `INSERT INTO userRole (userId, role, objectId) VALUES (?, ?, ?)`, [userResult.insertId, Role.Admin, 0]);
         }
       } finally {
         connection.end();
@@ -367,6 +368,23 @@ class DB {
     } catch (err) {
       console.error(JSON.stringify({ message: 'Error initializing database', exception: err.message, connection: config.db.connection }));
     }
+  }
+
+  async resetDatabase() {
+    if (process.env.NODE_ENV !== 'test') {
+      throw new Error('database reset is only available in the test environment');
+    }
+
+    await this.initialized;
+    const connection = await this._getConnection(false);
+    try {
+      await connection.query(`DROP DATABASE IF EXISTS \`${config.db.connection.database}\``);
+    } finally {
+      await connection.end();
+    }
+
+    this.initialized = this.initializeDatabase();
+    await this.initialized;
   }
 
   async checkDatabaseExists(connection) {

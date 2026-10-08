@@ -86,3 +86,8 @@ test('delete user success', async () => {
         message: 'deleted user'
     });
 });
+
+test('list users unauthorized', async () => {
+  const listUsersRes = await request(app).get('/api/user');
+  expect(listUsersRes.status).toBe(401);
+});
