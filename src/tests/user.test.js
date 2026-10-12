@@ -22,6 +22,7 @@ const testUser = { name: 'pizza diner', email: 'reg@test.com', password: 'a' };
 let testUserAuthToken;
 let testAdminUser;
 let testAdminUserToken;
+let paginationUsers;
 
 beforeAll(async () => {
     testUser.email = randomName() + '@test.com';
@@ -32,6 +33,15 @@ beforeAll(async () => {
     testAdminUser = await createAdminUser();
     const loginRes = await request(app).put('/api/auth').send(testAdminUser);
     testAdminUserToken = loginRes.body.token;
+    const paginationName = `pagination-${randomName()}`;
+    paginationUsers = await Promise.all(
+        [1, 2, 3].map((index) => DB.addUser({
+            name: `${paginationName}-${index}`,
+            email: `${paginationName}-${index}@test.com`,
+            password: 'a',
+            roles: [{ role: Role.Diner }],
+        }))
+    );
 });
 
 test('get authenticated user', async () => {
@@ -116,3 +126,38 @@ test('list users', async () => {
   });
 });
 
+test('list users paginates results and reports more users', async () => {
+  const listUsersRes = await request(app)
+    .get('/api/user?page=1&limit=2&name=pagination-*')
+    .set('Authorization', 'Bearer ' + testAdminUserToken);
+
+  expect(listUsersRes.status).toBe(200);
+  expect(listUsersRes.body.users).toHaveLength(2);
+  expect(listUsersRes.body.more).toBe(true);
+  expect(paginationUsers.map((user) => user.id)).toEqual(
+    expect.arrayContaining(listUsersRes.body.users.map((user) => user.id))
+  );
+});
+
+test('list users returns the final partial page', async () => {
+  const listUsersRes = await request(app)
+    .get('/api/user?page=2&limit=2&name=pagination-*')
+    .set('Authorization', 'Bearer ' + testAdminUserToken);
+
+  expect(listUsersRes.status).toBe(200);
+  expect(listUsersRes.body.users).toHaveLength(1);
+  expect(listUsersRes.body.more).toBe(false);
+  expect(paginationUsers.map((user) => user.id)).toContain(listUsersRes.body.users[0].id);
+});
+
+test('list users returns no users past the final page', async () => {
+  const listUsersRes = await request(app)
+    .get('/api/user?page=3&limit=2&name=pagination-*')
+    .set('Authorization', 'Bearer ' + testAdminUserToken);
+
+  expect(listUsersRes.status).toBe(200);
+  expect(listUsersRes.body).toMatchObject({
+    users: [],
+    more: false,
+  });
+});
