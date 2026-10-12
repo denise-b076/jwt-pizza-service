@@ -25,6 +25,17 @@ let testUserAuthToken;
 let testFranchise;
 let testStore;
 
+beforeAll(() => {
+    jest.spyOn(global, 'fetch').mockResolvedValue({
+        ok: true,
+        json: async () => ({ reportUrl: 'https://example.test/report', jwt: 'test.test.test' }),
+    });
+});
+
+afterAll(() => {
+    jest.restoreAllMocks();
+});
+
 beforeAll(async () => {
     testUser = { name: `testUser-${randomName()}`, email: `${randomName()}@test.com`, password: `${randomName()}`};
     const registerRes = await request(app).post('/api/auth').send(testUser);

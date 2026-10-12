@@ -91,3 +91,28 @@ test('list users unauthorized', async () => {
   const listUsersRes = await request(app).get('/api/user');
   expect(listUsersRes.status).toBe(401);
 });
+
+test('list users', async () => {
+  const listUsersRes = await request(app)
+    .get('/api/user')
+    .set('Authorization', 'Bearer ' + testAdminUserToken);
+  expect(listUsersRes.status).toBe(200);
+  expect(listUsersRes.body).toMatchObject({
+    users: expect.arrayContaining([
+        {
+        id: 1,
+        name: '常用名字',
+        email: 'a@jwt.com',
+        roles: [{ role: 'admin' }]
+        },
+        {
+        id: testAdminUser.id,
+        name: testAdminUser.name,
+        email: testAdminUser.email,
+        roles: testAdminUser.roles
+        }
+    ]),
+    more: false,
+  });
+});
+
