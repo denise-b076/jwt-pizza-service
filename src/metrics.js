@@ -1,6 +1,7 @@
 const config = require('./config');
 
 const requests = {};
+const authenticationAttempts = {};
 
 function requestTracker(req, res, next) {
   const endpoint = `[${req.method}] ${req.path}`;
@@ -9,12 +10,24 @@ function requestTracker(req, res, next) {
   next();
 }
 
+function authenticationAttemptTracker(res) {
+    res.once('finish', () => {
+        const status = res.statusCode;
+        const result = status === 200 ? 'successes' : 'failures';
+
+        authenticationAttempts[result] = (authenticationAttempts[result] || 0) + 1;
+    });
+}
+
 setInterval(() => {
   const metrics = [];
   Object.keys(requests).forEach((endpoint) => {
     metrics.push(createMetric('requests', requests[endpoint], '1', 'sum', 'asInt', { endpoint }));
   });
-
+  
+  Object.keys(authenticationAttempts).forEach((status) => {
+    metrics.push(createMetric('authentication_attempts', authenticationAttempts[status], '1', 'sum', 'asInt', { status }));
+  });
   sendMetricToGrafana(metrics);
 }, 10000);
 
@@ -78,4 +91,4 @@ function sendMetricToGrafana(metrics) {
     });
 }
 
-module.exports = { requestTracker };
+module.exports = { requestTracker, authenticationAttemptTracker };
