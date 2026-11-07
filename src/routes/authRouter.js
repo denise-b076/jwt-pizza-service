@@ -60,14 +60,14 @@ authRouter.authenticateToken = (req, res, next) => {
 authRouter.post(
   '/',
   asyncHandler(async (req, res) => {
-    metrics.authenticationAttemptTracker(res);
-    
     const { name, email, password } = req.body;
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'name, email, and password are required' });
     }
     const user = await DB.addUser({ name, email, password, roles: [{ role: Role.Diner }] });
     const auth = await setAuth(user);
+
+    metrics.authenticationAttemptTracker(res, user.id);
     res.json({ user: user, token: auth });
   })
 );
@@ -76,11 +76,11 @@ authRouter.post(
 authRouter.put(
   '/',
   asyncHandler(async (req, res) => {
-    metrics.authenticationAttemptTracker(res);
-
     const { email, password } = req.body;
     const user = await DB.getUser(email, password);
     const auth = await setAuth(user);
+
+    metrics.authenticationAttemptTracker(res, user.id);
     res.json({ user: user, token: auth });
   })
 );

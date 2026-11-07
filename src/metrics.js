@@ -4,6 +4,7 @@ const os = require('os');
 const requests = {};
 const authenticationAttempts = {};
 const pizzaOrderAttempts = {};
+const userActivity = {};
 let latencyTotal = 0;
 let pizzaLatencyTotal = 0;
 let latencyCount = 0;
@@ -12,6 +13,9 @@ let pizzaRevenueTotal = 0;
 
 function requestTracker(req, res, next) {
     const start = Date.now();
+    if (req.user?.id !== undefined) {
+        userActivity[req.user.id] = start;
+    }
     res.once('finish', () => {
         latencyTotal += Date.now() - start;
         latencyCount += 1;
@@ -22,26 +26,43 @@ function requestTracker(req, res, next) {
     next();
 }
 
-function authenticationAttemptTracker(res) {
+function authenticationAttemptTracker(res, userId) {
     res.once('finish', () => {
         const status = res.statusCode;
         const result = status === 200 ? 'successes' : 'failures';
+
+        if (status === 200 && userId !== undefined) {
+            userActivity[userId] = Date.now();
+        }
 
         authenticationAttempts[result] = (authenticationAttempts[result] || 0) + 1;
     });
 }
 
+function getActiveUserCount() {
+    const inactiveLimit = 20 * 60 * 1000;
+    const now = Date.now();
+
+    for (const [userId, lastActivity] of Object.entries(userActivity)) {
+        if (now - lastActivity >= inactiveLimit) {
+            delete userActivity[userId];
+        }
+  }
+
+  return Object.keys(userActivity).length;
+}
+
 function getCpuUsagePercentage() {
-  const cpuUsage = os.loadavg()[0] / os.cpus().length;
-  return cpuUsage.toFixed(2) * 100;
+    const cpuUsage = os.loadavg()[0] / os.cpus().length;
+    return cpuUsage.toFixed(2) * 100;
 }
 
 function getMemoryUsagePercentage() {
-  const totalMemory = os.totalmem();
-  const freeMemory = os.freemem();
-  const usedMemory = totalMemory - freeMemory;
-  const memoryUsage = (usedMemory / totalMemory) * 100;
-  return Number(memoryUsage.toFixed(2));
+    const totalMemory = os.totalmem();
+    const freeMemory = os.freemem();
+    const usedMemory = totalMemory - freeMemory;
+    const memoryUsage = (usedMemory / totalMemory) * 100;
+    return Number(memoryUsage.toFixed(2));
 }
 
 function pizzaPurchase(status, res, order) {
@@ -63,6 +84,8 @@ setInterval(() => {
   Object.keys(requests).forEach((endpoint) => {
     metrics.push(createMetric('requests', requests[endpoint], '1', 'sum', 'asInt', { endpoint }));
   });
+
+  metrics.push(createMetric('active_users', getActiveUserCount(), '1', 'gauge', 'asInt', {}));
   
   Object.keys(authenticationAttempts).forEach((status) => {
     metrics.push(createMetric('authentication_attempts', authenticationAttempts[status], '1', 'sum', 'asInt', { status }));
