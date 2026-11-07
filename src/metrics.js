@@ -3,12 +3,19 @@ const os = require('os');
 
 const requests = {};
 const authenticationAttempts = {};
+let latencyTotal = 0;
+let latencyCount = 0;
 
 function requestTracker(req, res, next) {
-  const endpoint = `[${req.method}] ${req.path}`;
-  requests[endpoint] = (requests[endpoint] || 0) + 1;
-  requests['all'] = (requests['all'] || 0) + 1;
-  next();
+    const start = Date.now();
+    res.once('finish', () => {
+        latencyTotal += Date.now() - start;
+        latencyCount += 1;
+    });
+    const endpoint = `[${req.method}] ${req.path}`;
+    requests[endpoint] = (requests[endpoint] || 0) + 1;
+    requests['all'] = (requests['all'] || 0) + 1;
+    next();
 }
 
 function authenticationAttemptTracker(res) {
@@ -47,6 +54,9 @@ setInterval(() => {
   const memoryUsage = getMemoryUsagePercentage();
   metrics.push(createMetric('cpu_usage', cpuUsage, '%', 'gauge', 'asDouble', { display_name: 'CPU' }));
   metrics.push(createMetric('memory_usage', memoryUsage, '%', 'gauge', 'asDouble', { display_name: 'Memory' }));
+
+  metrics.push(createMetric('latency_total', latencyTotal, 'ms', 'sum', 'asInt', {}));
+  metrics.push(createMetric('latency_count', latencyCount, '1', 'sum', 'asInt', {}));
 
   sendMetricToGrafana(metrics);
 }, 10000);
