@@ -26,17 +26,19 @@ function requestTracker(req, res, next) {
     next();
 }
 
-function authenticationAttemptTracker(res, userId) {
+function authenticationAttemptTracker(res) {
     res.once('finish', () => {
         const status = res.statusCode;
         const result = status === 200 ? 'successes' : 'failures';
 
-        if (status === 200 && userId !== undefined) {
-            userActivity[userId] = Date.now();
-        }
-
         authenticationAttempts[result] = (authenticationAttempts[result] || 0) + 1;
     });
+}
+
+function addUserActivity(userId) {
+    if (userId !== undefined) {
+        userActivity[userId] = Date.now();
+    }
 }
 
 function getActiveUserCount() {
@@ -171,4 +173,4 @@ function sendMetricToGrafana(metrics) {
     });
 }
 
-module.exports = { requestTracker, authenticationAttemptTracker, pizzaPurchase };
+module.exports = { requestTracker, authenticationAttemptTracker, pizzaPurchase, addUserActivity };
