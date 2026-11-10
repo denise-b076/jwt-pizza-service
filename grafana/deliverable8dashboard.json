@@ -5,18 +5,18 @@
     "name": "dblqjxs",
     "namespace": "stacks-1896928",
     "uid": "453b0ddd-ed93-4173-b65b-219752e70fc7",
-    "resourceVersion": "2119888892348231680",
-    "generation": 3,
+    "resourceVersion": "2120013055678308352",
+    "generation": 7,
     "creationTimestamp": "2026-11-09T20:09:43Z",
     "labels": {
       "grafana.app/deprecatedInternalID": "3193340053794816"
     },
     "annotations": {
       "grafana.app/createdBy": "user:ag2mpl9vqpybkd",
-      "grafana.app/message": "changed time interval of pizza purchases and latency sources",
+      "grafana.app/message": "changed time range default for grading purposes",
       "grafana.app/saved-from-ui": "Grafana Cloud",
       "grafana.app/updatedBy": "user:ag2mpl9vqpybkd",
-      "grafana.app/updatedTimestamp": "2026-11-09T20:24:31Z"
+      "grafana.app/updatedTimestamp": "2026-11-10T04:37:55Z"
     }
   },
   "spec": {
@@ -68,6 +68,122 @@
                       "spec": {
                         "editorMode": "builder",
                         "expr": "rate(requests_total{source=\"jwt-pizza-service\"}[1m]) * 60",
+                        "legendFormat": "{{endpoint}}",
+                        "range": true
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {
+                "interval": "10s"
+              }
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "13.4.0-41983029144",
+            "spec": {
+              "options": {
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "list",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "single",
+                  "sort": "none"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 80,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 0,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "pointSize": 5,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "auto",
+                    "showValues": false,
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-10": {
+        "kind": "Panel",
+        "spec": {
+          "id": 10,
+          "title": "api router HTTP requests/minute",
+          "description": "HTTP requests by method/minute for /api calls only",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
+                      "spec": {
+                        "editorMode": "builder",
+                        "expr": "rate(requests_total{source=\"jwt-pizza-service\", endpoint=~\"\\\\[(DELETE|POST|PUT|GET)\\\\] /api/[a-z/]*\"}[1m]) * 60",
                         "legendFormat": "{{endpoint}}",
                         "range": true
                       }
@@ -1105,6 +1221,15 @@
             "spec": {
               "element": {
                 "kind": "ElementReference",
+                "name": "panel-10"
+              }
+            }
+          },
+          {
+            "kind": "AutoGridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
                 "name": "panel-2"
               }
             }
@@ -1181,8 +1306,8 @@
     "tags": [],
     "timeSettings": {
       "timezone": "browser",
-      "from": "now-5m",
-      "to": "now",
+      "from": "2026-11-09T20:19:00.000Z",
+      "to": "2026-11-09T20:26:00.000Z",
       "autoRefresh": "5s",
       "autoRefreshIntervals": [
         "5s",
