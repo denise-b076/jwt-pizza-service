@@ -30,8 +30,13 @@ class Logger {
     this.log('info', 'db', queryData);
   }
 
-  factoryLogger(orderInfo) {
-    this.log('info', 'factory', orderInfo);
+  factoryLogger(req, res) {
+    const logData = {
+      userId: req.diner.id,
+      reqBody: JSON.stringify(req),
+      resBody: JSON.stringify(res)
+    };
+    this.log('info', 'factory', logData);
   }
 
   unhandledErrorLogger(err) {
@@ -60,6 +65,10 @@ class Logger {
     logData = JSON.stringify(logData);
     logData = logData.replace(/\\"password\\":\s*\\"[^"]*\\"/g, '\\"password\\": \\"*****\\"');
     logData = logData.replace(/\\password\\=\s*\\"[^"]*\\"/g, '\\"password\\": \\"*****\\"');
+    logData = logData.replace(/\\"email\\":\s*\\"[^"]*\\"/g, '\\"email\\": \\"*****\\"');
+    logData = logData.replace(/\\email\\=\s*\\"[^"]*\\"/g, '\\"email\\": \\"*****\\"');
+    logData = logData.replace(/\\"name\\":\s*\\"[^"]*\\"/g, '\\"name\\": \\"*****\\"');
+    logData = logData.replace(/\\name\\=\s*\\"[^"]*\\"/g, '\\"name\\": \\"*****\\"');
     return logData;
   }
 
