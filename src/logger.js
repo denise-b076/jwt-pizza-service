@@ -24,7 +24,10 @@ class Logger {
   };
 
   dbLogger(query) {
-    this.log('info', 'db', query);
+    const queryData = {
+      sqlQuery: query
+    };
+    this.log('info', 'db', queryData);
   }
 
   factoryLogger(orderInfo) {
