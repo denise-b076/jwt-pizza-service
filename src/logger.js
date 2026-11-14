@@ -16,7 +16,12 @@ class Logger {
         resBody: JSON.stringify(resBody),
       };
       const level = this.statusToLogLevel(res.statusCode);
-      this.log(level, 'http', logData);
+      if (level == "error") {
+        this.log(level, 'unhandledException', logData);
+      }
+      else {
+        this.log(level, 'http', logData);
+      }
       res.send = send;
       return res.send(resBody);
     };
