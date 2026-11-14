@@ -39,10 +39,6 @@ class Logger {
     this.log('info', 'factory', logData);
   }
 
-  unhandledErrorLogger(err) {
-    this.log('error', 'unhandledError', { message: err.message, status: err.statusCode });
-  }
-
   log(level, type, logData) {
     const labels = { component: this.config.logging.source, level: level, type: type };
     const values = [this.nowString(), this.sanitize(logData)];
