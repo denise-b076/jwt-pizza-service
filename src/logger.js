@@ -37,9 +37,9 @@ class Logger {
 
   factoryLogger(requestBody, responseBody) {
     const logData = {
-      userId: requestBody.diner?.id ?? null,
+      userId: requestBody.diner.id,
       reqBody: requestBody,
-      resBody: responseBody,
+      resBody: responseBody
     };
     this.log('info', 'factory', logData);
   }
