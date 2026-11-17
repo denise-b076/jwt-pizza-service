@@ -16,12 +16,13 @@ class Logger {
         resBody: JSON.stringify(resBody),
       };
       const level = this.statusToLogLevel(res.statusCode);
-      if (level == "error") {
-        this.log(level, 'unhandledException', logData);
-      }
-      else {
-        this.log(level, 'http', logData);
-      }
+      this.log(level, 'http', logData);
+      // if (level == "error") {
+      //   this.log(level, 'unhandledException', logData);
+      // }
+      // else {
+      //   this.log(level, 'http', logData);
+      // }
       res.send = send;
       return res.send(resBody);
     };
@@ -35,13 +36,17 @@ class Logger {
     this.log('info', 'db', queryData);
   }
 
-  factoryLogger(req, res) {
+  factoryLogger(req, resBody) {
     const logData = {
-      userId: req.diner.id,
+      userId: req.diner?.id ?? null,
       reqBody: JSON.stringify(req),
-      resBody: JSON.stringify(res)
+      resBody: JSON.stringify(resBody),
     };
     this.log('info', 'factory', logData);
+  }
+
+  unhandledErrorLogger(err) {
+    this.log('error', 'unhandledError', { message: err.message, status: err.statusCode });
   }
 
   log(level, type, logData) {
@@ -70,6 +75,10 @@ class Logger {
     logData = logData.replace(/\\email\\=\s*\\"[^"]*\\"/g, '\\"email\\": \\"*****\\"');
     logData = logData.replace(/\\"name\\":\s*\\"[^"]*\\"/g, '\\"name\\": \\"*****\\"');
     logData = logData.replace(/\\name\\=\s*\\"[^"]*\\"/g, '\\"name\\": \\"*****\\"');
+    logData = logData.replace(/\\"token\\":\s*\\"[^"]*\\"/g, '\\"token\\": \\"*****\\"');
+    logData = logData.replace(/\\token\\=\s*\\"[^"]*\\"/g, '\\"token\\": \\"*****\\"');
+    logData = logData.replace(/\\"name\\":\s*\\"[^"]*\\"/g, '\\"jwt\\": \\"*****\\"');
+    logData = logData.replace(/\\name\\=\s*\\"[^"]*\\"/g, '\\"jwt\\": \\"*****\\"');
     return logData;
   }
 

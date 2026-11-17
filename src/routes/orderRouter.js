@@ -88,8 +88,8 @@ orderRouter.post(
       headers: { 'Content-Type': 'application/json', authorization: `Bearer ${config.factory.apiKey}` },
       body: JSON.stringify(orderInfo),
     });
-    logger.factoryLogger(orderInfo, r);
     const j = await r.json();
+    logger.factoryLogger(orderInfo, j);
     if (r.ok) {
       metrics.pizzaPurchase('success', res, order);
       res.send({ order, followLinkToEndChaos: j.reportUrl, jwt: j.jwt });
