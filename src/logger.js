@@ -12,8 +12,8 @@ class Logger {
         path: req.path,
         method: req.method,
         statusCode: res.statusCode,
-        reqBody: JSON.stringify(req.body),
-        resBody: JSON.stringify(resBody),
+        reqBody: req.body ?? null,
+        resBody: resBody ?? null,
       };
       const level = this.statusToLogLevel(res.statusCode);
       if (level == "error") {
