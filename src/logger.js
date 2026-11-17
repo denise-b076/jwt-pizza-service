@@ -36,11 +36,11 @@ class Logger {
     this.log('info', 'db', queryData);
   }
 
-  factoryLogger(req, resBody) {
+  factoryLogger(requestBody, responseBody) {
     const logData = {
-      userId: req.diner?.id ?? null,
-      reqBody: JSON.stringify(req),
-      resBody: JSON.stringify(resBody),
+      userId: requestBody.diner?.id ?? null,
+      reqBody: requestBody,
+      resBody: responseBody,
     };
     this.log('info', 'factory', logData);
   }
@@ -68,18 +68,31 @@ class Logger {
   }
 
   sanitize(logData) {
-    logData = JSON.stringify(logData);
-    logData = logData.replace(/\\"password\\":\s*\\"[^"]*\\"/g, '\\"password\\": \\"*****\\"');
-    logData = logData.replace(/\\password\\=\s*\\"[^"]*\\"/g, '\\"password\\": \\"*****\\"');
-    logData = logData.replace(/\\"email\\":\s*\\"[^"]*\\"/g, '\\"email\\": \\"*****\\"');
-    logData = logData.replace(/\\email\\=\s*\\"[^"]*\\"/g, '\\"email\\": \\"*****\\"');
-    logData = logData.replace(/\\"name\\":\s*\\"[^"]*\\"/g, '\\"name\\": \\"*****\\"');
-    logData = logData.replace(/\\name\\=\s*\\"[^"]*\\"/g, '\\"name\\": \\"*****\\"');
-    logData = logData.replace(/\\"token\\":\s*\\"[^"]*\\"/g, '\\"token\\": \\"*****\\"');
-    logData = logData.replace(/\\token\\=\s*\\"[^"]*\\"/g, '\\"token\\": \\"*****\\"');
-    logData = logData.replace(/\\"name\\":\s*\\"[^"]*\\"/g, '\\"jwt\\": \\"*****\\"');
-    logData = logData.replace(/\\name\\=\s*\\"[^"]*\\"/g, '\\"jwt\\": \\"*****\\"');
-    return logData;
+    const sensitiveFields = new Set(['password', 'email', 'name', 'token', 'jwt']);
+
+    const redact = (value) => {
+      if (Array.isArray(value)) {
+        return value.map(redact);
+      }
+      if (value && typeof value === 'object') {
+        return Object.fromEntries(
+          Object.entries(value).map(([key, fieldValue]) => [
+            key,
+            sensitiveFields.has(key.toLowerCase()) ? '*****' : redact(fieldValue),
+          ])
+        );
+      }
+      if (typeof value === 'string') {
+        try {
+          return redact(JSON.parse(value));
+        } catch {
+          return value;
+        }
+      }
+      return value;
+    };
+
+    return JSON.stringify(redact(logData));
   }
 
   async sendLogToGrafana(event) {
