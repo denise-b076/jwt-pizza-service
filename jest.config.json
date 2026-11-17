@@ -1,6 +1,7 @@
 {
     "collectCoverage": true,
     "globalSetup": "<rootDir>/src/tests/globalSetup.js",
+    "testPathIgnorePatterns": ["/node_modules/", "/dist/"],
     "coverageReporters": ["json-summary", "text"],
     "coverageThreshold": {
         "global": {

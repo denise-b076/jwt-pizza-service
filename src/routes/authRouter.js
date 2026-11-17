@@ -78,9 +78,6 @@ authRouter.put(
   '/',
   asyncHandler(async (req, res) => {
     metrics.authenticationAttemptTracker(res);
-    if (!email || !password) {
-      return res.status(400).json({ message: 'email and password are required' });
-    }
     const { email, password } = req.body;
     const user = await DB.getUser(email, password);
     const auth = await setAuth(user);
